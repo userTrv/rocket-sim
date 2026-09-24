@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Fly a two-stage rocket from the launch pad to low Earth orbit. A 3D launch and flight simulator built with three.js and TypeScript." />
+    <meta name="theme-color" content="#05070b" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2305070b'/%3E%3Cpath d='M16 4c3 3 4.5 7 4.5 11v7h-9v-7C11.5 11 13 7 16 4z' fill='%23eef0f2'/%3E%3Cpath d='M13 24h6l-3 5z' fill='%23ffa24a'/%3E%3C/svg%3E" />
+    <title>Rocket Sim: launch to orbit</title>
+  </head>
+  <body>
+    <main id="app" class="app">
+      <div class="scene" data-scene></div>
+      <div class="map-labels" data-labels hidden></div>
+      <div class="ui" data-ui></div>
+      <div class="fallback" data-fallback hidden>
+        <h1>WebGL 2 is not available</h1>
+        <p>This simulator needs a browser with WebGL 2 enabled (any recent Chrome, Firefox, Safari or Edge).</p>
+      </div>
+    </main>
+    <script type="module" src="./src/main.ts"></script>
+  </body>
+</html>
