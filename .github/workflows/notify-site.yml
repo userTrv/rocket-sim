@@ -1,0 +1,31 @@
+# После зелёного CI в main просит usertrv.dev пересобрать сайт вместе с этим проектом.
+# Нужен секрет SITE_DEPLOY_TOKEN: fine-grained PAT только на userTrv/usertrv.dev,
+# Contents: read and write. Без секрета шаг пропускается.
+name: Notify site
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  notify:
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: repository_dispatch → userTrv/usertrv.dev
+        env:
+          TOKEN: ${{ secrets.SITE_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::notice::SITE_DEPLOY_TOKEN не задан, сайт не пересобирается"
+            exit 0
+          fi
+          curl -fsS -X POST \
+            -H "Authorization: Bearer $TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/userTrv/usertrv.dev/dispatches \
+            -d "{\"event_type\":\"project-updated\",\"client_payload\":{\"repo\":\"${{ github.repository }}\",\"sha\":\"${{ github.event.workflow_run.head_sha }}\"}}"
