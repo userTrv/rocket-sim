@@ -6,6 +6,7 @@ import { Simulation, type LaunchSite } from '../sim/simulation';
 import { clampWarp, maxAllowedWarp, PHYSICS_WARP_MAX, stepSizeForWarp, stepWarp } from '../sim/time-warp';
 import type { VehicleConfig } from '../sim/vehicle/config';
 import { Hud } from '../ui/hud';
+import { STAGING_CONFIRM_WINDOW, earlyStagingWarning } from './staging-guard';
 import { KeyboardInput } from '../ui/keyboard-input';
 import { axesFromHeld, type Action } from '../ui/keymap';
 import { HelpOverlay, PauseOverlay, ResultOverlay } from '../ui/overlays';
@@ -55,6 +56,8 @@ export class Game {
   private raf = 0;
   private lastTime = 0;
   private hudTimer = 0;
+  /** performance.now() of an unconfirmed early staging request, 0 if none. */
+  private stagingRequestedAt = 0;
   private chartTimer = 0;
 
   constructor(private readonly options: GameOptions) {
@@ -246,6 +249,17 @@ export class Game {
     if (axes.throttle !== 0) this.sim.setThrottle(this.sim.throttle + axes.throttle * THROTTLE_RATE * dt);
   }
 
+  private requestStaging(): void {
+    const warning = this.sim.launched ? earlyStagingWarning(this.sim.telemetry) : null;
+    const now = performance.now();
+    if (warning && now - this.stagingRequestedAt > STAGING_CONFIRM_WINDOW * 1000) {
+      this.stagingRequestedAt = now;
+      return this.hud.flash(warning, STAGING_CONFIRM_WINDOW);
+    }
+    this.stagingRequestedAt = 0;
+    this.sim.stage();
+  }
+
   private onAction(action: Action): void {
     const sim = this.sim;
     if (action === 'help') return this.help.toggle();
@@ -257,7 +271,7 @@ export class Game {
     if (this.result.isOpen || this.userPaused) return;
     switch (action) {
       case 'stage':
-        return sim.stage();
+        return this.requestStaging();
       case 'throttle-full':
         return sim.setThrottle(1);
       case 'throttle-cut':

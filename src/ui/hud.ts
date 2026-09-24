@@ -172,7 +172,7 @@ export class Hud {
 
   private hint(state: HudState, t: Telemetry): string {
     if (performance.now() < this.flashUntil) return this.flashText;
-    if (state.missionState === 'pad') return 'Space: launch  ·  G: autopilot  ·  H: help';
+    if (state.missionState === 'pad') return 'Space: launch  ·  G: autopilot (launches too)  ·  H: help';
     if (t.autopilot === 'coast-to-apoapsis' && state.maxWarp > state.warp) return 'Coasting to apoapsis: press . to time-warp';
     return '';
   }
