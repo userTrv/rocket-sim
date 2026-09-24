@@ -1,0 +1,36 @@
+{
+  "name": "rocket-sim",
+  "version": "1.0.0",
+  "private": true,
+  "description": "3D rocket launch and flight simulator: fly a two-stage launcher from the pad to low Earth orbit. three.js + TypeScript.",
+  "license": "MIT",
+  "author": "Kirill Levin",
+  "type": "module",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "pnpm typecheck && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . && pnpm typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "three": "0.186.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10",
+    "@types/node": "^24",
+    "@types/three": "0.186.0",
+    "eslint": "^10",
+    "globals": "^17",
+    "typescript": "6.0.3",
+    "typescript-eslint": "^8.70.1",
+    "vite": "^8.3.0",
+    "vitest": "^5.0.1"
+  }
+}
