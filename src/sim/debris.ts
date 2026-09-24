@@ -2,6 +2,7 @@ import { R_EARTH } from './constants';
 import { rk4Step } from './dynamics';
 import { length, type Vec3 } from './math/vec3';
 import { integrateBodyRate, type Quat } from './math/quat';
+import type { SeparatedBody } from './vehicle/vehicle';
 
 /** A jettisoned body (spent stage, fairing half) flying a simple ballistic path. */
 export interface Debris {
@@ -33,4 +34,25 @@ export function stepDebris(d: Debris, dt: number): void {
   d.v = next.v;
   d.q = integrateBodyRate(d.q, d.w, dt);
   if (length(d.r) <= R_EARTH) d.alive = false;
+}
+
+/** Build a debris body from a separated stage or fairing half. */
+export function createDebris(
+  id: number,
+  body: SeparatedBody,
+  variant: number,
+  pose: { r: Vec3; v: Vec3; q: Quat; w: Vec3 },
+  time: number,
+): Debris {
+  return {
+    id,
+    kind: body.kind,
+    name: body.name,
+    variant: body.kind === 'stage' ? body.stageIndex : variant,
+    ...pose,
+    mass: body.mass,
+    referenceArea: Math.PI * (body.diameter / 2) ** 2 * TUMBLE_DRAG_FACTOR,
+    createdAt: time,
+    alive: true,
+  };
 }

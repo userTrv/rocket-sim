@@ -23,7 +23,10 @@ export interface Telemetry {
   readonly maxQ: number;
   readonly maxQTime: number | null;
   readonly gLoad: number;
+  /** Throttle actually applied by the running engine, 0..1. */
   readonly throttle: number;
+  /** Throttle setting commanded by the pilot or autopilot, 0..1. */
+  readonly throttleCommand: number;
   readonly thrust: number;
   readonly mass: number;
   readonly ambientPressure: number;

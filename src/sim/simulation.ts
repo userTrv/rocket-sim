@@ -2,10 +2,11 @@ import { aerodynamics, gravityAt, rk4Step, type AeroState } from './dynamics';
 import { atmosphereAt } from './atmosphere';
 import { attitudeControl, attitudeFromForward, NOSE, rotationalStep, TOP, type Inertia } from './attitude';
 import { R_EARTH } from './constants';
-import { stepDebris, TUMBLE_DRAG_FACTOR, type Debris } from './debris';
+import { createDebris, stepDebris, type Debris } from './debris';
 import { MaxQDetector, type SimEvent, type SimEventType } from './events';
 import { altitude, earthAngle, geoToDirection, localFrame, rotateWithEarth, surfaceVelocityAt } from './frames';
 import { Autopilot, DEFAULT_AUTOPILOT, type AutopilotOptions, type GuidanceCommand, type GuidanceContext } from './guidance/autopilot';
+import { buildGuidanceContext } from './guidance/context';
 import { addScaled, length, scale, sub, vec3, ZERO, type Vec3 } from './math/vec3';
 import { fromAxisAngle, fromBasis, multiply, rotate, type Quat } from './math/quat';
 import { orbitalElements, type OrbitalElements } from './orbit';
@@ -289,7 +290,7 @@ export class Simulation {
     const relight = v.stageIgnitionsLeft < v.stage.engine.ignitions;
     if (v.ignite()) {
       const left = v.stageIgnitionsLeft;
-      this.emit('ignition', `${v.stage.name} ${relight ? 'relight' : 'ignition'} (${left} ignition${left === 1 ? '' : 's'} left)`);
+      this.emit('ignition', `${v.stage.name} ${relight ? 'relight' : 'ignition'} (${left} left)`);
     } else if (!this.noIgnitionWarned) {
       this.noIgnitionWarned = true;
       this.emit('no-ignitions', `${v.stage.name}: no ignitions left`);
@@ -335,20 +336,7 @@ export class Simulation {
   }
 
   private addDebris(body: SeparatedBody, variant: number, r: Vec3, v: Vec3, w: Vec3): void {
-    this.debris.push({
-      id: this.nextDebrisId++,
-      kind: body.kind,
-      name: body.name,
-      variant: body.kind === 'stage' ? body.stageIndex : variant,
-      r,
-      v,
-      q: this.state.q,
-      w,
-      mass: body.mass,
-      referenceArea: Math.PI * (body.diameter / 2) ** 2 * TUMBLE_DRAG_FACTOR,
-      createdAt: this.t,
-      alive: true,
-    });
+    this.debris.push(createDebris(this.nextDebrisId++, body, variant, { r, v, q: this.state.q, w }, this.t));
   }
 
   private postStep(comHeight: number): void {
@@ -357,7 +345,7 @@ export class Simulation {
     this.telemetry = this.buildTelemetry();
     if (this.phase !== 'flight') return;
     const peak = this.maxQ.update(this.aero.dynamicPressure, this.missionTime);
-    if (peak) this.emit('max-q', `Max-Q: ${(peak.value / 1000).toFixed(1)} kPa`);
+    if (peak) this.emit('max-q', `Max-Q: ${(peak.value / 1000).toFixed(1)} kPa`, peak.time);
     if (!this.orbitAchieved && this.orbit.periapsis > ORBIT_PERIAPSIS_THRESHOLD) {
       this.orbitAchieved = true;
       const km = (m: number) => (m / 1000).toFixed(0);
@@ -381,34 +369,15 @@ export class Simulation {
   }
 
   guidanceContext(): GuidanceContext {
-    const v = this.vehicle;
-    const pressure = this.aero?.pressure ?? atmosphereAt(altitude(this.state.r)).pressure;
-    return {
-      t: this.t,
-      r: this.state.r,
-      v: this.state.v,
-      altitude: altitude(this.state.r),
-      dynamicPressure: this.aero?.dynamicPressure ?? 0,
-      orbit: this.orbit ?? orbitalElements(this.state.r, this.state.v),
-      onPad: this.phase === 'prelaunch',
-      stageIndex: v.stageIndex,
-      hasNextStage: v.hasNextStage,
-      engineRunning: v.engineRunning,
-      stagePropellant: v.stagePropellant,
-      mass: v.mass,
-      fullThrust: Math.max(0, v.stage.engine.vacuumThrust - pressure * v.exitArea()),
-      maxMassFlow: v.maxMassFlow(),
-      minThrottle: v.stage.engine.minThrottle,
-      ispVacuum: v.stage.engine.ispVacuum,
-    };
+    return buildGuidanceContext(this);
   }
 
   private buildTelemetry(): Telemetry {
     return computeTelemetry(this, this.maxQ);
   }
 
-  private emit(type: SimEventType, message: string): void {
-    this.events.push({ type, message, missionTime: this.missionTime });
+  private emit(type: SimEventType, message: string, missionTime = this.missionTime): void {
+    this.events.push({ type, message, missionTime });
   }
 }
 

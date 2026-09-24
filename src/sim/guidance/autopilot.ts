@@ -223,8 +223,8 @@ export class Autopilot {
           return hold(this.horizontal(ctx), 1);
         }
         // Allow warp as long as the burn start stays several frames of warp away.
-        const timeToBurn = tApo - burn / 2 - 15;
-        return hold(orbitalPrograde, 0, { warpLimit: Math.max(1, timeToBurn / 4) });
+        const timeToBurn = tApo - burn / 2 - 10;
+        return hold(orbitalPrograde, 0, { warpLimit: Math.max(1, timeToBurn / 1.5) });
       }
 
       case 'circularize': {
