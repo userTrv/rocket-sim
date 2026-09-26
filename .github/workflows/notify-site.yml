@@ -19,6 +19,9 @@ jobs:
       - name: repository_dispatch → userTrv/usertrv.dev
         env:
           TOKEN: ${{ secrets.SITE_DEPLOY_TOKEN }}
+          # Данные события — через env, а не подстановкой в скрипт.
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           if [ -z "$TOKEN" ]; then
             echo "::notice::SITE_DEPLOY_TOKEN не задан, сайт не пересобирается"
@@ -28,4 +31,4 @@ jobs:
             -H "Authorization: Bearer $TOKEN" \
             -H "Accept: application/vnd.github+json" \
             https://api.github.com/repos/userTrv/usertrv.dev/dispatches \
-            -d "{\"event_type\":\"project-updated\",\"client_payload\":{\"repo\":\"${{ github.repository }}\",\"sha\":\"${{ github.event.workflow_run.head_sha }}\"}}"
+            -d "{\"event_type\":\"project-updated\",\"client_payload\":{\"repo\":\"$REPO\",\"sha\":\"$SHA\"}}"

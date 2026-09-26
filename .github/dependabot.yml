@@ -1,0 +1,24 @@
+# Обновления зависимостей и экшенов раз в неделю одним PR на экосистему.
+# cooldown: версия предлагается не раньше чем через 7 дней после публикации,
+# как и minimumReleaseAge в pnpm-workspace.yaml.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      npm:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]

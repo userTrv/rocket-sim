@@ -143,7 +143,7 @@ tests/        Vitest: physics, guidance end-to-end, app and UI logic
 
 ## Running locally
 
-Requires Node 22.12+ (CI uses Node 24) and pnpm 9.
+Requires Node 22.12+ (CI uses Node 24) and pnpm 10 (exact version in `packageManager`, `corepack enable`).
 
 ```bash
 pnpm install
